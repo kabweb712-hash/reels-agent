@@ -1,0 +1,37 @@
+# Environment
+.env
+.env.*
+
+# Database
+*.db
+*.db-shm
+*.db-wal
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+*.mp3
+*.tmp
+temp/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation
+README original.md

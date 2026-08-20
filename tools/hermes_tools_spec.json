@@ -1,0 +1,67 @@
+{
+  "_comment": "Tools Hermès (function-calling, format OpenAI/OpenRouter). À câbler dans la config de l'agent. Chaque tool appelle une fonction Python locale qui interagit avec la DB SQLite reels.db sur le VPS.",
+  "tools": [
+    {
+      "name": "enqueue_reel",
+      "description": "Enregistre un lien de reel (Instagram/TikTok/YouTube/X) dans la queue de traitement. À appeler quand l'utilisateur partage ou envoie une URL de reel vidéo courte. Retourne un accusé de réception. Le traitement (transcription + analyse) se fait plus tard par le batch cron.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "url": {"type": "string", "description": "URL complète du reel"},
+          "note": {"type": "string", "description": "Note optionnelle de l'utilisateur (pourquoi il a trouvé ça intéressant, contexte)"},
+          "platform": {"type": "string", "enum": ["instagram", "tiktok", "youtube", "x"], "description": "Plateforme. Détectée automatiquement si omis."}
+        },
+        "required": ["url"]
+      }
+    },
+    {
+      "name": "query_reels",
+      "description": "Recherche dans les reels déjà traités. Recherche plein-texte (FTS5) sur le transcript et le résumé, + filtres par catégorie/tags/date. Utiliser quand l'utilisateur demande de retrouver des reels par sujet, mot-clé ou thème (ex: 'reels sur le RAG', 'vidéos motivation de cette semaine').",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "keywords": {"type": "string", "description": "Mots-clés à chercher dans transcript + résumé (recherche plein-texte)"},
+          "category": {"type": "string", "description": "Filtrer par catégorie exacte (Dev / IA, Business, Motivation, Lifestyle, Sorties / Adresses, Fitness, Autre)"},
+          "tags": {"type": "array", "items": {"type": "string"}, "description": "Filtrer par tags (au moins un correspondant)"},
+          "since_days": {"type": "integer", "description": "Limiter aux reels traités dans les N derniers jours"},
+          "limit": {"type": "integer", "description": "Nombre max de résultats (défaut 10)"}
+        }
+      }
+    },
+    {
+      "name": "list_pending_reels",
+      "description": "Affiche l'état de la queue de traitement: combien de reels en attente, en cours, échoués. Utile quand l'utilisateur demande 'où en est le traitement ?' ou avant de déclencher un batch manuel.",
+      "parameters": {"type": "object", "properties": {}}
+    },
+    {
+      "name": "list_categories",
+      "description": "Liste toutes les catégories (fixes + promues) avec leur compteur d'usage, et les suggestions de catégories en attente de validation. Utiliser quand l'utilisateur demande un aperçu de sa taxonomie ou veut voir les suggestions de l'IA.",
+      "parameters": {"type": "object", "properties": {}}
+    },
+    {
+      "name": "accept_category",
+      "description": "Valide une catégorie suggérée par l'IA: la promeut de 'suggested' à 'promoted' dans la taxonomie. À appeler quand l'utilisateur accepte une suggestion (ex: 'accepte la catégorie Recettes'). Accepte un nom de catégorie ou l'ID de suggestion.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "name": {"type": "string", "description": "Nom exact de la catégorie suggérée à promouvoir"},
+          "suggestion_id": {"type": "integer", "description": "ID de la ligne dans category_suggestions (alternative au nom)"}
+        }
+      }
+    },
+    {
+      "name": "trigger_batch",
+      "description": "Déclenche manuellement et immédiatement le batch processor (transcription + analyse des reels en attente). Normalement le batch tourne en cron quotidien, mais l'utilisateur peut vouloir le forcer (ex: 'traite mes reels maintenant'). Retourne un récap quand c'est fini.",
+      "parameters": {"type": "object", "properties": {}}
+    },
+    {
+      "name": "get_reel_detail",
+      "description": "Récupère le détail complet d'un reel par son ID: transcript intégral, résumé, points clés, tags, créateur, URL, lien Notion. Utiliser quand l'utilisateur demande le contenu complet d'un reel précis.",
+      "parameters": {
+        "type": "object",
+        "properties": {"reel_id": {"type": "integer", "description": "ID du reel dans la table reels"}},
+        "required": ["reel_id"]
+      }
+    }
+  ]
+}
