@@ -314,7 +314,7 @@ reels-agent/
 
 ## 📄 License
 
-MIT © [TON_NOM]
+MIT © kabweb712-hash
 
 ---
 
